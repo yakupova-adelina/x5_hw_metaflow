@@ -81,40 +81,30 @@ class PointClassificationFlow(FlowSpec):
 
     @step
     def data_augment(self):
-        print('before in augment')
 
         def augment(points, label):
             # jitter points
-            print('in augment function')
             points += tf.random.uniform(points.shape, -0.005, 0.005,
                                         dtype=np.float64)
             # shuffle points
-            print('before shuffle')
             points = tf.random.shuffle(points)
-            print('after shuffle')
             return points, label
-        print('after augment function')
 
         self.train_dataset = tf.data.Dataset.from_tensor_slices(
             (self.train_points, self.train_labels))
-        print('train_dataset 1', self.train_dataset)
         self.test_dataset = tf.data.Dataset.from_tensor_slices(
             (self.test_points, self.test_labels))
-        print('test_dataset 1', self.test_dataset)
         self.train_dataset = self.train_dataset.shuffle(
             len(self.train_points)
         ).map(augment).batch(self.batch_size)
-        print('train_dataset 2', self.train_dataset)
         self.test_dataset = self.test_dataset.shuffle(
             len(self.test_points)
         ).batch(self.batch_size)
-        print('test_dataset 2', self.test_dataset)
 
         self.next(self.build_model)
 
     @step
     def build_model(self):
-        print('in build_model')
 
         def conv_bn(x, filters):
             x = layers.Conv1D(filters, kernel_size=1, padding="valid")(x)
@@ -146,9 +136,6 @@ class PointClassificationFlow(FlowSpec):
             feat_T = layers.Reshape((num_features, num_features))(x)
             # Apply affine transformation to input features
             return layers.Dot(axes=(2, 1))([inputs, feat_T])
-        print('after functions')
-        for next_element in self.temp_dataset:
-            tf.print(next_element)
 
         inputs = keras.Input(shape=(self.num_points, 3))
 
